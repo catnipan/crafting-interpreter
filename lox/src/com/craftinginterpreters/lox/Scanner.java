@@ -80,6 +80,7 @@ public class Scanner {
                 if (match('/')) {
                     // this is comment! until the end of this line
                     while (peek() != '\n' && !isAtEnd()) advance();
+                    // don't consume the `\n` yet, handle separately since we need update line no
                 } else {
                     addToken(SLASH);
                 }
@@ -90,6 +91,7 @@ public class Scanner {
             case ' ':
             case '\r':
             case '\t':
+                // skip whitespace
                 break;
 
             case '"': string(); break;
@@ -148,11 +150,12 @@ public class Scanner {
             advance();
         }
 
+        // when exiting the while loop, either we see " or EOF
         if (isAtEnd()) {
             Lox.error(line, "Unterminated string.");
             return;
         }
-        advance();
+        advance(); // skip closing "
 
         String value = source.substring(start + 1, current - 1);
         addToken(STRING, value);
@@ -160,17 +163,19 @@ public class Scanner {
 
     private char peek() {
         // lookahead
+        // no consume, peek `current`
         if (isAtEnd()) return '\0';
         return source.charAt(current);
     }
 
     private char peekNext() {
+        // no consume, peek `current + 1`
         if (current + 1 >= source.length()) return '\0';
         return source.charAt(current + 1);
     }
 
     private boolean match(char expected) {
-        //
+        // consume one if match
         if (isAtEnd()) return false;
         if (source.charAt(current) == expected) {
             current++;
@@ -180,6 +185,7 @@ public class Scanner {
     }
 
     private char advance() {
+        // consume one
         current++;
         return source.charAt(current - 1);
     }
